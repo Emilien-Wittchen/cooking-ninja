@@ -1,9 +1,9 @@
+import {useState, useRef, useEffect} from 'react';
+import {useFetch} from '../../hooks/useFetch';
+import {useNavigate} from 'react-router-dom';
+
+// styles
 import './Create.css';
-import {useEffect, useState} from 'react';
-import {useRef} from 'react';
-// import {useFetch} from '../../hooks/useFetch';
-import {useHistory} from 'react-router-dom';
-import {projectFirestore} from '../../firebase/config';
 
 export default function Create() {
   const [title, setTitle] = useState('');
@@ -12,28 +12,18 @@ export default function Create() {
   const [newIngredient, setNewIngredient] = useState('');
   const [ingredients, setIngredients] = useState([]);
   const ingredientInput = useRef(null);
-  const history = useHistory();
 
-  // const {postData, data, error} = useFetch(
-  //   'http://localhost:3000/recipes',
-  //   'POST'
-  // );
+  const {postData, data} = useFetch('http://localhost:3000/recipes', 'POST');
+  const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    const doc = {
+    postData({
       title,
       ingredients,
       method,
       cookingTime: cookingTime + ' minutes',
-    };
-
-    try {
-      await projectFirestore.collection('recipes').add(doc);
-      history.push('/');
-    } catch (err) {
-      console.log(err);
-    }
+    });
   };
 
   const handleAdd = (e) => {
@@ -41,23 +31,22 @@ export default function Create() {
     const ing = newIngredient.trim();
 
     if (ing && !ingredients.includes(ing)) {
-      setIngredients((prevIngredients) => [...prevIngredients, ing]);
+      setIngredients((prevIngredients) => [...prevIngredients, newIngredient]);
     }
     setNewIngredient('');
     ingredientInput.current.focus();
   };
 
-  // redirect the use r after data response
-  // useEffect(() => {
-  //   if (data) {
-  //     history.push('/');
-  //   }
-  // }, [data]);
+  // redirect the user when we get data response
+  useEffect(() => {
+    if (data) {
+      navigate('/');
+    }
+  }, [data, navigate]);
 
   return (
     <div className='create'>
-      <h2 className='page-title'>Add a new recipe.</h2>
-
+      <h2 className='page-title'>Add a New Recipe</h2>
       <form onSubmit={handleSubmit}>
         <label>
           <span>Recipe title:</span>
@@ -70,13 +59,11 @@ export default function Create() {
         </label>
 
         <label>
-          <span>Recipe ingredients:</span>
+          <span>Recipe Ingredients:</span>
           <div className='ingredients'>
             <input
               type='text'
-              onChange={(e) => {
-                setNewIngredient(e.target.value);
-              }}
+              onChange={(e) => setNewIngredient(e.target.value)}
               value={newIngredient}
               ref={ingredientInput}
             />
@@ -93,7 +80,7 @@ export default function Create() {
         </p>
 
         <label>
-          <span>Recipe method:</span>
+          <span>Recipe Method:</span>
           <textarea
             onChange={(e) => setMethod(e.target.value)}
             value={method}
@@ -102,7 +89,7 @@ export default function Create() {
         </label>
 
         <label>
-          <span>Cooking time:</span>
+          <span>Cooking time (minutes):</span>
           <input
             type='number'
             onChange={(e) => setCookingTime(e.target.value)}
@@ -111,7 +98,7 @@ export default function Create() {
           />
         </label>
 
-        <button className='btn'>Submit</button>
+        <button className='btn'>submit</button>
       </form>
     </div>
   );
